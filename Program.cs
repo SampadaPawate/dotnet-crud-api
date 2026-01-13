@@ -3,6 +3,13 @@ using CrudApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure port for Railway/cloud deployments
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -53,15 +60,20 @@ app.MapControllers();
 // Redirect root URL to Swagger
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
-// Ensure database is created
-using (var scope = app.Services.CreateScope())
+// Ensure database is created (non-blocking, with error handling)
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Database.EnsureCreated();
+    }
 }
-
-// Use PORT environment variable for Railway/cloud deployments
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-app.Urls.Add($"http://0.0.0.0:{port}");
+catch (Exception ex)
+{
+    // Log error but don't prevent app from starting
+    var logger = app.Services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
+    logger.LogError(ex, "Error creating database");
+}
 
 app.Run();
