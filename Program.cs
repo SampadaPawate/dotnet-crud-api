@@ -76,25 +76,35 @@ try
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
+    // Don't use HTTPS redirection in Railway (Railway handles HTTPS termination)
+    
     // Enable Swagger in all environments for portfolio/demo purposes
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Only redirect to HTTPS if both HTTP and HTTPS are configured
-    var httpsPort = app.Configuration["ASPNETCORE_HTTPS_PORT"];
-    if (!string.IsNullOrEmpty(httpsPort))
-    {
-        app.UseHttpsRedirection();
-    }
-
     app.UseAuthorization();
     app.MapControllers();
 
-    // Redirect root URL to Swagger
-    app.MapGet("/", () => Results.Redirect("/swagger"));
+    // Root endpoint - return simple response instead of redirect
+    app.MapGet("/", () => Results.Ok(new { 
+        message = "API is running", 
+        swagger = "/swagger",
+        health = "/health",
+        api = "/api/products"
+    }));
 
-    // Health check endpoint
-    app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+    // Health check endpoint (Railway uses this to verify app is running)
+    app.MapGet("/health", () => 
+    {
+        return Results.Ok(new { 
+            status = "healthy", 
+            timestamp = DateTime.UtcNow,
+            port = Environment.GetEnvironmentVariable("PORT") ?? "5000"
+        });
+    });
+    
+    // Simple ping endpoint
+    app.MapGet("/ping", () => Results.Ok("pong"));
 
     // Ensure database is created (non-blocking, with error handling)
     try
