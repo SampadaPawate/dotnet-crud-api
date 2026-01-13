@@ -5,7 +5,7 @@ nixPkgs = ["dotnet-sdk_8"]
 cmds = ["dotnet restore"]
 
 [phases.build]
-cmds = ["dotnet publish -c Release -o ./publish --self-contained false"]
+cmds = ["dotnet publish -c Release -o ./publish --self-contained true -r linux-x64 /p:CopyOutputSymbolsToPublishDirectory=false"]
 
 [start]
-cmd = "dotnet ./publish/CrudApp.dll"
+cmd = "./publish/CrudApp"
