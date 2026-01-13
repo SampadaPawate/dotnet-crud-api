@@ -97,7 +97,11 @@ try
     
     // Enable Swagger in all environments for portfolio/demo purposes
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product CRUD API V1");
+        c.RoutePrefix = "swagger"; // Ensure Swagger is at /swagger
+    });
 
     // Don't use UseAuthorization() without authentication - it can block requests
     // app.UseAuthorization(); // Commented out - not needed for public API
