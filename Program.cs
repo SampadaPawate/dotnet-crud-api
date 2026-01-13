@@ -6,17 +6,25 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Configure port for Railway/cloud deployments
+    // Priority: PORT env var > ASPNETCORE_URLS > default 8080
     var port = Environment.GetEnvironmentVariable("PORT");
+    var aspnetcoreUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+    
     if (!string.IsNullOrEmpty(port) && int.TryParse(port, out var portNumber))
     {
         builder.WebHost.UseUrls($"http://0.0.0.0:{portNumber}");
-        Console.WriteLine($"Configured to listen on port: {portNumber}");
+        Console.WriteLine($"Configured to listen on port: {portNumber} (from PORT env var)");
+    }
+    else if (!string.IsNullOrEmpty(aspnetcoreUrls))
+    {
+        // Use ASPNETCORE_URLS if set (from Dockerfile)
+        Console.WriteLine($"Using ASPNETCORE_URLS: {aspnetcoreUrls}");
     }
     else
     {
-        // Default to port 5000 for local development
-        builder.WebHost.UseUrls("http://0.0.0.0:5000");
-        Console.WriteLine("Using default port: 5000");
+        // Default to port 8080 for Railway (common default)
+        builder.WebHost.UseUrls("http://0.0.0.0:8080");
+        Console.WriteLine("Using default port: 8080");
     }
 
     // Add services to the container.
@@ -77,6 +85,13 @@ try
 
     // Configure the HTTP request pipeline.
     // Don't use HTTPS redirection in Railway (Railway handles HTTPS termination)
+    
+    // Add request logging for debugging
+    app.Use(async (context, next) =>
+    {
+        Console.WriteLine($"Request: {context.Request.Method} {context.Request.Path}");
+        await next();
+    });
     
     // Enable Swagger in all environments for portfolio/demo purposes
     app.UseSwagger();
