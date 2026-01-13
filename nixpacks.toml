@@ -2,10 +2,10 @@
 nixPkgs = ["dotnet-sdk_8"]
 
 [phases.install]
-cmds = ["dotnet restore --verbosity minimal"]
+cmds = ["dotnet restore"]
 
 [phases.build]
-cmds = ["dotnet publish -c Release -o /app --no-restore"]
+cmds = ["dotnet publish -c Release -o ./publish"]
 
 [start]
-cmd = "dotnet /app/CrudApp.dll"
+cmd = "dotnet ./publish/CrudApp.dll"

@@ -9,6 +9,11 @@ if (!string.IsNullOrEmpty(port))
 {
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
+else
+{
+    // Default to port 5000 for local development
+    builder.WebHost.UseUrls("http://0.0.0.0:5000");
+}
 
 // Add services to the container.
 builder.Services.AddControllers();
