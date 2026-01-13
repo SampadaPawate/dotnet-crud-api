@@ -1,11 +1,11 @@
 [phases.setup]
-nixPkgs = ["dotnet-sdk_8", "dotnet-aspnetcore_8"]
+nixPkgs = ["dotnet-sdk_8"]
 
 [phases.install]
-cmds = ["dotnet restore"]
+cmds = ["dotnet restore --verbosity minimal"]
 
 [phases.build]
-cmds = ["dotnet publish -c Release -o /app"]
+cmds = ["dotnet publish -c Release -o /app --no-restore"]
 
 [start]
 cmd = "dotnet /app/CrudApp.dll"
