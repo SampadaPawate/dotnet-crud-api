@@ -36,11 +36,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Enable Swagger in all environments for portfolio/demo purposes
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Only redirect to HTTPS if both HTTP and HTTPS are configured
 var httpsPort = app.Configuration["ASPNETCORE_HTTPS_PORT"];
@@ -61,5 +59,9 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
 }
+
+// Use PORT environment variable for Railway/cloud deployments
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();
