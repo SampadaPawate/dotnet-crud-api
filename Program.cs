@@ -6,25 +6,18 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Configure port for Railway/cloud deployments
-    // Priority: PORT env var > ASPNETCORE_URLS > default 8080
+    // Railway sets PORT environment variable - use it if available, otherwise default to 8080
     var port = Environment.GetEnvironmentVariable("PORT");
-    var aspnetcoreUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
-    
     if (!string.IsNullOrEmpty(port) && int.TryParse(port, out var portNumber))
     {
         builder.WebHost.UseUrls($"http://0.0.0.0:{portNumber}");
         Console.WriteLine($"Configured to listen on port: {portNumber} (from PORT env var)");
     }
-    else if (!string.IsNullOrEmpty(aspnetcoreUrls))
-    {
-        // Use ASPNETCORE_URLS if set (from Dockerfile)
-        Console.WriteLine($"Using ASPNETCORE_URLS: {aspnetcoreUrls}");
-    }
     else
     {
-        // Default to port 8080 for Railway (common default)
+        // Default to port 8080 for Railway
         builder.WebHost.UseUrls("http://0.0.0.0:8080");
-        Console.WriteLine("Using default port: 8080");
+        Console.WriteLine("Using default port: 8080 (PORT env var not set)");
     }
 
     // Add services to the container.
@@ -89,15 +82,25 @@ try
     // Add request logging for debugging
     app.Use(async (context, next) =>
     {
-        Console.WriteLine($"Request: {context.Request.Method} {context.Request.Path}");
-        await next();
+        try
+        {
+            Console.WriteLine($"Request: {context.Request.Method} {context.Request.Path}");
+            await next();
+            Console.WriteLine($"Response: {context.Response.StatusCode} for {context.Request.Path}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling request: {ex.Message}");
+            throw;
+        }
     });
     
     // Enable Swagger in all environments for portfolio/demo purposes
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    app.UseAuthorization();
+    // Don't use UseAuthorization() without authentication - it can block requests
+    // app.UseAuthorization(); // Commented out - not needed for public API
     app.MapControllers();
 
     // Root endpoint - return simple response instead of redirect
